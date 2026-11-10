@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deckpilot-ui
+  namespace: deckpilot
+  labels:
+    app: deckpilot-ui
+    part-of: deckpilot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: deckpilot-ui
+  template:
+    metadata:
+      labels:
+        app: deckpilot-ui
+        part-of: deckpilot
+    spec:
+      containers:
+        - name: deckpilot-ui
+          image: deckpilot/deckpilot-ui:1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet: { path: /healthz, port: 80 }
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /healthz, port: 80 }
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            requests: { cpu: 20m, memory: 32Mi }
+            limits: { cpu: 200m, memory: 128Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: deckpilot-ui
+  namespace: deckpilot
+  labels:
+    app: deckpilot-ui
+    part-of: deckpilot
+spec:
+  type: NodePort
+  selector:
+    app: deckpilot-ui
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30080
